@@ -31,3 +31,12 @@
     order: unset;
   }
 }
+
+.columns .material-check > h4 {
+    text-transform: uppercase;
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 30px;
+    letter-spacing: 0;
+    color: #000000;
+}
