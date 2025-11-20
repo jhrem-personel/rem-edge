@@ -128,25 +128,19 @@ async function loadLazy(doc) {
   loadFonts();
   
   // Load Fancybox for lightbox functionality
-  loadCSS('https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox.css');
+  loadCSS('https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css');
   const fancyboxScript = document.createElement('script');
-  fancyboxScript.src = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox.umd.js';
+  fancyboxScript.src = 'https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js';
   fancyboxScript.async = true;
   fancyboxScript.onload = () => {
     if (window.Fancybox) {
-      window.Fancybox.bind('[data-fancybox]', {
-        // Enable all toolbar buttons
-        toolbar: {
-          display: {
-            left: ['infobar'],
-            middle: [],
-            right: ['slideshow', 'fullscreen', 'thumbs', 'close']
-          }
-        },
+      window.Fancybox.bind('[data-fancybox="gallery"]', {
+        // Enable all buttons
+        buttons: ['slideshow', 'fullscreen', 'thumbs', 'close'],
         // Autoplay settings
         autoplay: {
-          duration: 3000, // 3 seconds per slide
-          autostart: false // Start manually or set to true for auto-start
+          duration: 3000,
+          autostart: false
         },
         // Slideshow settings
         slideshow: {
@@ -160,8 +154,7 @@ async function loadLazy(doc) {
         },
         // Thumbnails
         thumbs: {
-          autoStart: true,
-          hideOnClose: false
+          autoStart: true
         },
         // Keyboard navigation
         keyboard: true,

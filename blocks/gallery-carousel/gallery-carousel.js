@@ -2,13 +2,17 @@ export default function decorate(block) {
   // Gallery Carousel component: 4-column image grid with lightbox
   
   const rows = Array.from(block.querySelectorAll(':scope > div'));
+  console.log('Gallery carousel - Total rows:', rows.length);
   
   const container = document.createElement('div');
   container.classList.add('gallery-carousel-container');
   
+  let imageCount = 0;
+  
   // Process each row as a gallery item (skip first row which is the block name)
-  rows.slice(1).forEach((row) => {
+  rows.slice(1).forEach((row, idx) => {
     const cells = Array.from(row.querySelectorAll(':scope > div'));
+    console.log(`Row ${idx + 1} - Cells:`, cells.length);
     
     if (cells.length >= 1) {
       let imageUrl = null;
@@ -22,6 +26,7 @@ export default function decorate(block) {
       if (img) {
         imageUrl = img.src;
         caption = img.alt || '';
+        console.log(`Row ${idx + 1} - Found image in first cell:`, imageUrl);
       }
       
       // Check second cell for link (URL)
@@ -29,8 +34,10 @@ export default function decorate(block) {
       if (link && !imageUrl) {
         imageUrl = link.href;
         caption = link.textContent || '';
+        console.log(`Row ${idx + 1} - Found link in second cell:`, imageUrl);
       } else if (link && imageUrl) {
         imageUrl = link.href;
+        console.log(`Row ${idx + 1} - Using link as full-size image:`, imageUrl);
       }
       
       // Check for text content in second cell
@@ -38,10 +45,12 @@ export default function decorate(block) {
         const text = secondCell.textContent.trim();
         if (text.startsWith('http')) {
           imageUrl = text;
+          console.log(`Row ${idx + 1} - Found URL in text:`, imageUrl);
         }
       }
       
       if (imageUrl) {
+        imageCount++;
         const item = document.createElement('div');
         item.classList.add('gallery-carousel-item');
         
@@ -61,9 +70,13 @@ export default function decorate(block) {
         galleryLink.append(imgElement);
         item.append(galleryLink);
         container.append(item);
+        
+        console.log(`Image ${imageCount} added:`, imageUrl);
       }
     }
   });
+  
+  console.log('Gallery carousel - Total images added:', imageCount);
   
   block.textContent = '';
   block.append(container);
