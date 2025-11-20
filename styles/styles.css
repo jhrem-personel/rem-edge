@@ -148,8 +148,17 @@ pre {
   white-space: pre;
 }
 
+main {
+  display: block;
+  width: 100%;
+}
+
 main > div {
-  margin: 40px 16px;
+  margin: 0;
+  padding: 0;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 input,
