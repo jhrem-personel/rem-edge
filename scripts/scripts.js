@@ -135,6 +135,39 @@ async function loadLazy(doc) {
   fancyboxScript.onload = () => {
     if (window.Fancybox) {
       window.Fancybox.bind('[data-fancybox]', {
+        // Enable all toolbar buttons
+        toolbar: {
+          display: {
+            left: ['infobar'],
+            middle: [],
+            right: ['slideshow', 'fullscreen', 'thumbs', 'close']
+          }
+        },
+        // Autoplay settings
+        autoplay: {
+          duration: 3000, // 3 seconds per slide
+          autostart: false // Start manually or set to true for auto-start
+        },
+        // Slideshow settings
+        slideshow: {
+          duration: 3000
+        },
+        // Zoom settings
+        zoom: true,
+        // Fullscreen settings
+        fullscreen: {
+          autoStart: false
+        },
+        // Thumbnails
+        thumbs: {
+          autoStart: true,
+          hideOnClose: false
+        },
+        // Keyboard navigation
+        keyboard: true,
+        // Animations
+        placeFocusBack: true,
+        trapFocus: true,
         on: {
           reveal: (fancybox, slide) => {
             // Optional: add custom behavior
