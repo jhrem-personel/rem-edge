@@ -4,6 +4,13 @@ export default function decorate(block) {
   const rows = Array.from(block.querySelectorAll(':scope > div'));
   console.log('Gallery carousel - Total rows:', rows.length);
   
+  // Log all rows for debugging
+  rows.forEach((row, idx) => {
+    const cells = Array.from(row.querySelectorAll(':scope > div'));
+    const cellTexts = cells.map(cell => cell.textContent.trim().substring(0, 50)).join(' | ');
+    console.log(`Row ${idx}: ${cellTexts}`);
+  });
+  
   const container = document.createElement('div');
   container.classList.add('gallery-carousel-container');
   
