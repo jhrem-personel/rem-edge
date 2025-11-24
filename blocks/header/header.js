@@ -1,135 +1,175 @@
 import { getMetadata } from '../../scripts/aem.js';
 import { loadFragment } from '../fragment/fragment.js';
 
-// media query match that indicates mobile/tablet width
-const isDesktop = window.matchMedia('(min-width: 900px)');
+// Media query for responsive behavior
+const isDesktop = window.matchMedia('(min-width: 992px)');
 
+/**
+ * Toggles all nav sections
+ */
+function toggleAllNavSections(sections, expanded = false) {
+  if (!sections) return;
+  sections.querySelectorAll(':scope > li').forEach((section) => {
+    section.setAttribute('aria-expanded', expanded);
+  });
+}
+
+/**
+ * Toggles the entire nav menu (mobile)
+ */
+function toggleMenu(nav, navSections, forceExpanded = null) {
+  if (!navSections) return;
+  const expanded = forceExpanded !== null ? !forceExpanded : nav.getAttribute('aria-expanded') === 'true';
+  document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
+  nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
+  
+  const button = nav.querySelector('.navbar-toggler');
+  if (button) {
+    button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
+  }
+}
+
+/**
+ * Close menu on Escape key
+ */
 function closeOnEscape(e) {
   if (e.code === 'Escape') {
-    const nav = document.getElementById('nav');
+    const nav = document.querySelector('.navbar');
     if (!nav) return;
-    const navSections = nav.querySelector('.nav-sections');
+    const navSections = nav.querySelector('.navbar-collapse');
     if (!navSections) return;
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-    if (navSectionExpanded && isDesktop.matches) {
-      // eslint-disable-next-line no-use-before-define
-      toggleAllNavSections(navSections);
-      navSectionExpanded.focus();
-    } else if (!isDesktop.matches) {
-      // eslint-disable-next-line no-use-before-define
+    if (!isDesktop.matches) {
       toggleMenu(nav, navSections);
       nav.querySelector('button').focus();
     }
   }
 }
 
-function closeOnFocusLost(e) {
-  const nav = e.currentTarget;
-  if (!nav.contains(e.relatedTarget)) {
-    const navSections = nav.querySelector('.nav-sections');
-    if (!navSections) return;
-    const navSectionExpanded = navSections.querySelector('[aria-expanded="true"]');
-    if (navSectionExpanded && isDesktop.matches) {
-      // eslint-disable-next-line no-use-before-define
-      toggleAllNavSections(navSections, false);
-    } else if (!isDesktop.matches) {
-      // eslint-disable-next-line no-use-before-define
-      toggleMenu(nav, navSections, false);
-    }
-  }
-}
-
-function openOnKeydown(e) {
-  const focused = document.activeElement;
-  const isNavDrop = focused.className === 'nav-drop';
-  if (isNavDrop && (e.code === 'Enter' || e.code === 'Space')) {
-    const dropExpanded = focused.getAttribute('aria-expanded') === 'true';
-    // eslint-disable-next-line no-use-before-define
-    toggleAllNavSections(focused.closest('.nav-sections'));
-    focused.setAttribute('aria-expanded', dropExpanded ? 'false' : 'true');
-  }
-}
-
-function focusNavSection() {
-  document.activeElement.addEventListener('keydown', openOnKeydown);
-}
-
 /**
- * Toggles all nav sections
- * @param {Element} sections The container element
- * @param {Boolean} expanded Whether the element should be expanded or collapsed
- */
-function toggleAllNavSections(sections, expanded = false) {
-  if (!sections) return;
-  sections.querySelectorAll(':scope ul > li').forEach((section) => {
-    section.setAttribute('aria-expanded', expanded);
-  });
-}
-
-/**
- * Toggles the entire nav
- * @param {Element} nav The container element
- * @param {Element} navSections The nav sections within the container element
- * @param {*} forceExpanded Optional param to force nav expand behavior when not null
- */
-function toggleMenu(nav, navSections, forceExpanded = null) {
-  if (!navSections) return;
-  const expanded = forceExpanded !== null ? !forceExpanded : nav.getAttribute('aria-expanded') === 'true';
-  const button = nav.querySelector('.nav-hamburger button');
-  document.body.style.overflowY = (expanded || isDesktop.matches) ? '' : 'hidden';
-  nav.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-  toggleAllNavSections(navSections, expanded || isDesktop.matches ? 'false' : 'true');
-  button.setAttribute('aria-label', expanded ? 'Open navigation' : 'Close navigation');
-  // enable nav dropdown keyboard accessibility
-  const navDrops = navSections ? navSections.querySelectorAll('.nav-drop') : [];
-  if (isDesktop.matches) {
-    navDrops.forEach((drop) => {
-      if (!drop.hasAttribute('tabindex')) {
-        drop.setAttribute('tabindex', 0);
-        drop.addEventListener('focus', focusNavSection);
-      }
-    });
-  } else {
-    navDrops.forEach((drop) => {
-      drop.removeAttribute('tabindex');
-      drop.removeEventListener('focus', focusNavSection);
-    });
-  }
-
-  // enable menu collapse on escape keypress
-  if (!expanded || isDesktop.matches) {
-    // collapse menu on escape press
-    window.addEventListener('keydown', closeOnEscape);
-    // collapse menu on focus lost
-    nav.addEventListener('focusout', closeOnFocusLost);
-  } else {
-    window.removeEventListener('keydown', closeOnEscape);
-    nav.removeEventListener('focusout', closeOnFocusLost);
-  }
-}
-
-/**
- * loads and decorates the header, mainly the nav
- * @param {Element} block The header block element
+ * Main header decorator function
  */
 export default async function decorate(block) {
-  // load nav as fragment
+  // Load navigation from fragment
   const navMeta = getMetadata('nav');
   const navPath = navMeta ? new URL(navMeta, window.location).pathname : '/nav';
   const fragment = await loadFragment(navPath);
 
-  // decorate nav DOM
+  // Clear block content
   block.textContent = '';
-  const nav = document.createElement('nav');
-  nav.id = 'nav';
-  
-  // Build nav model from all list items in the fragment (including nested).
-  // Extract text and URL from each <li> to support links.
-  const allLis = Array.from(fragment.querySelectorAll('li'));
-  if (allLis.length) {
+
+  // Create main header structure
+  const headerDiv = document.createElement('div');
+  headerDiv.classList.add('menubar', 'w-full');
+  headerDiv.setAttribute('data-aos', 'fade-right');
+  headerDiv.setAttribute('data-aos-easing', 'ease-in-out');
+  headerDiv.setAttribute('data-aos-delay', '0');
+  headerDiv.setAttribute('data-aos-duration', '500');
+
+  const container = document.createElement('div');
+  container.classList.add('container');
+
+  const row = document.createElement('div');
+  row.classList.add('row');
+
+  // LOGO SECTION (Left side)
+  const logoCol = document.createElement('div');
+  logoCol.classList.add('col-6', 'col-sm-6', 'col-md-3', 'col-lg-2');
+
+  const logoLink = document.createElement('a');
+  logoLink.href = 'https://www.acerbisoem.com/';
+  logoLink.classList.add('logo');
+
+  const logoImg = document.createElement('img');
+  logoImg.src = 'https://www.acerbisoem.com/wp-content/uploads/2024/07/acerbis-oem-label-1.png';
+  logoImg.alt = 'Acerbis OEM';
+
+  logoLink.append(logoImg);
+  logoCol.append(logoLink);
+  row.append(logoCol);
+
+  // NAVIGATION SECTION (Right side)
+  const navCol = document.createElement('div');
+  navCol.classList.add('col-6', 'col-sm-6', 'col-md-9', 'col-lg-10');
+
+  // Top bar with language and buttons
+  const hdrSopra = document.createElement('div');
+  hdrSopra.classList.add('hdr-sopra', 'clearfix');
+
+  // Language selector
+  const langSelector = document.createElement('div');
+  langSelector.classList.add('box-icl_language_selector', 'float-right');
+  langSelector.innerHTML = `
+    <div class="wpml-ls wpml-ls-legacy-dropdown-click">
+      <ul role="menu">
+        <li class="wpml-ls-item wpml-ls-item-it wpml-ls-current-language" role="none">
+          <a href="#" class="js-wpml-ls-item-toggle" role="menuitem">
+            <span class="wpml-ls-native">ITA</span>
+          </a>
+          <ul class="js-wpml-ls-sub-menu wpml-ls-sub-menu" role="menu">
+            <li class="wpml-ls-item wpml-ls-item-en" role="none">
+              <a href="#" class="wpml-ls-link" role="menuitem">
+                <span class="wpml-ls-native">ENG</span>
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  `;
+
+  // Buttons
+  const contactsBtn = document.createElement('a');
+  contactsBtn.href = 'https://www.acerbis.com/it/contatti';
+  contactsBtn.target = '_blank';
+  contactsBtn.classList.add('button', 'float-right', 'ms-2');
+  contactsBtn.textContent = 'Contacts';
+
+  const acerbisWorldBtn = document.createElement('a');
+  acerbisWorldBtn.href = 'https://www.acerbis.com/it';
+  acerbisWorldBtn.target = '_blank';
+  acerbisWorldBtn.classList.add('button', 'float-right');
+  acerbisWorldBtn.textContent = 'Acerbis World';
+
+  hdrSopra.append(contactsBtn);
+  hdrSopra.append(acerbisWorldBtn);
+  hdrSopra.append(langSelector);
+
+  navCol.append(hdrSopra);
+
+  // Navigation bar
+  const navbar = document.createElement('nav');
+  navbar.classList.add('navbar', 'navbar-expand-lg', 'nopad');
+
+  // Mobile hamburger button
+  const toggler = document.createElement('button');
+  toggler.classList.add('navbar-toggler', 'collapsed');
+  toggler.setAttribute('type', 'button');
+  toggler.setAttribute('aria-controls', 'navbarSupportedContent');
+  toggler.setAttribute('aria-label', 'Toggle navigation');
+  toggler.innerHTML = `
+    <span class="bar"></span>
+    <span class="bar"></span>
+    <span class="bar"></span>
+  `;
+
+  navbar.append(toggler);
+
+  // Parse navigation from fragment
+  const navCollapse = document.createElement('div');
+  navCollapse.classList.add('collapse', 'navbar-collapse');
+  navCollapse.id = 'navbarSupportedContent';
+
+  const navUl = document.createElement('ul');
+  navUl.id = 'menu-header-menu';
+  navUl.classList.add('header-menu', 'ms-auto');
+
+  // Extract navigation items from fragment
+  if (fragment) {
+    const allLis = Array.from(fragment.querySelectorAll('li'));
     const labels = [];
+
     allLis.forEach((li) => {
-      // Check if there's a link
       const link = li.querySelector(':scope > a');
       let text = '';
       let url = '';
@@ -138,7 +178,6 @@ export default async function decorate(block) {
         text = link.textContent.trim();
         url = link.href;
       } else {
-        // Own text node (ignore nested <ul> text)
         const ownTextNode = Array.from(li.childNodes)
           .find((n) => n.nodeType === Node.TEXT_NODE);
         text = (ownTextNode ? ownTextNode.textContent : '').trim();
@@ -149,184 +188,79 @@ export default async function decorate(block) {
       }
     });
 
-    // Expected order (from nav-content.txt)
-    // 0: Acerbis
-    // 1-3: Chi siamo, R&D e Qualità, Sostenibilità
-    // 4: Settori
-    // 5-9: Motorcycle, Agricoltura, Movimento terra, Material handling, Altri settori
-    // 10: Tecnologie
-    // 11-12: Stampaggio rotazionale, Stampaggio a iniezione
-    // 13: Engineering
-    // 14-15: Project Management, Engineering Capability
-    // 16: Lavora con noi
-    // 17: Contatti
-    // 18: Mondo Acerbis
+    // Build navigation structure
+    const navItems = [
+      { label: labels[0], children: labels.slice(1, 4) },      // Acerbis + 3 items
+      { label: labels[4], children: labels.slice(5, 10) },     // Sectors + 5 items
+      { label: labels[10], children: labels.slice(11, 13) },   // Technologies + 2 items
+      { label: labels[13], children: labels.slice(14, 16) },   // Engineering + 2 items
+      { label: labels[16], children: [] },                      // Work with us
+    ];
 
-    if (labels.length >= 19) {
-      const navModel = [
-        { label: labels[0], children: labels.slice(1, 4) },
-        { label: labels[4], children: labels.slice(5, 10) },
-        { label: labels[10], children: labels.slice(11, 13) },
-        { label: labels[13], children: labels.slice(14, 16) },
-        { label: labels[16], children: [] },
-        { label: labels[17], children: [] },
-        { label: labels[18], children: [] },
-      ];
+    navItems.forEach((item, idx) => {
+      if (!item.label) return;
 
-      // Brand: Acerbis + OEM DIVISION
-      const brandDiv = document.createElement('div');
-      brandDiv.classList.add('nav-brand');
-      const brandText = document.createElement('div');
-      brandText.innerHTML = `<strong>${labels[0].text}</strong><br><small>OEM DIVISION</small>`;
-      brandDiv.append(brandText);
-      nav.append(brandDiv);
+      const li = document.createElement('li');
+      li.classList.add('nav-item');
+      if (item.children.length > 0) {
+        li.classList.add('dropdown');
+      }
 
-      // Sections (main nav + dropdowns)
-      const sectionsDiv = document.createElement('div');
-      sectionsDiv.classList.add('nav-sections');
-      const sectionsUl = document.createElement('ul');
+      const a = document.createElement('a');
+      a.href = item.label.url || '#';
+      a.classList.add('nav-link');
+      a.textContent = item.label.text;
 
-      navModel.forEach((item) => {
-        const li = document.createElement('li');
-        
-        // Create link or text for main item
-        if (item.label.url) {
-          const a = document.createElement('a');
-          a.href = item.label.url;
-          a.textContent = item.label.text;
-          li.append(a);
-        } else {
-          li.textContent = item.label.text;
-        }
+      if (item.children.length > 0) {
+        a.classList.add('dropdown-toggle');
+        a.setAttribute('data-bs-toggle', 'dropdown');
+        a.setAttribute('aria-haspopup', 'true');
+        a.setAttribute('aria-expanded', 'false');
 
-        if (item.children && item.children.length > 0) {
-          li.classList.add('nav-drop');
-          const subUl = document.createElement('ul');
-          item.children.forEach((childItem) => {
-            const subLi = document.createElement('li');
-            
-            // Create link or text for child item
-            if (childItem.url) {
-              const a = document.createElement('a');
-              a.href = childItem.url;
-              a.textContent = childItem.text;
-              subLi.append(a);
-            } else {
-              subLi.textContent = childItem.text;
-            }
-            
-            subUl.append(subLi);
-          });
-          li.append(subUl);
-        }
-        sectionsUl.append(li);
-      });
+        const dropdownUl = document.createElement('ul');
+        dropdownUl.classList.add('dropdown-menu');
 
-      sectionsDiv.append(sectionsUl);
-      nav.append(sectionsDiv);
-    } else {
-      // Fallback: append fragment content as-is
-      while (fragment.firstElementChild) nav.append(fragment.firstElementChild);
-    }
-  } else {
-    // Fallback
-    while (fragment.firstElementChild) nav.append(fragment.firstElementChild);
-  }
+        item.children.forEach((child) => {
+          if (!child.text) return;
 
-  const navBrand = nav.querySelector('.nav-brand');
-  const brandLink = navBrand ? navBrand.querySelector('.button') : null;
-  if (brandLink) {
-    brandLink.className = '';
-    brandLink.closest('.button-container').className = '';
-  }
+          const dropdownLi = document.createElement('li');
+          const dropdownA = document.createElement('a');
+          dropdownA.href = child.url || '#';
+          dropdownA.classList.add('dropdown-item');
+          dropdownA.textContent = child.text;
 
-  const navSections = nav.querySelector('.nav-sections');
-  if (navSections) {
-    navSections.querySelectorAll(':scope ul > li').forEach((navSection) => {
-      if (navSection.querySelector('ul')) navSection.classList.add('nav-drop');
-      navSection.addEventListener('click', () => {
-        if (isDesktop.matches) {
-          const expanded = navSection.getAttribute('aria-expanded') === 'true';
-          toggleAllNavSections(navSections);
-          navSection.setAttribute('aria-expanded', expanded ? 'false' : 'true');
-        }
-      });
+          dropdownLi.append(dropdownA);
+          dropdownUl.append(dropdownLi);
+        });
+
+        li.append(a);
+        li.append(dropdownUl);
+      } else {
+        li.append(a);
+      }
+
+      navUl.append(li);
     });
   }
 
-  // nav-tools (language selector + buttons)
-  const toolsDiv = document.createElement('div');
-  toolsDiv.classList.add('nav-tools');
-  
-  // Get current language from localStorage or default to IT
-  const currentLang = localStorage.getItem('acerbis-lang') || 'IT';
-  
-  // Language labels
-  const langLabels = {
-    IT: { mondo: 'Acerbis World', contatti: 'Contacts', lang: 'ITA', altLang: 'ENGLISH' },
-    EN: { mondo: 'Acerbis World', contatti: 'Contacts', lang: 'ENG', altLang: 'ITALIANO' }
-  };
-  
-  toolsDiv.innerHTML = `
-    <div class="nav-language-selector">
-      <div class="nav-language-dropdown">
-        <button class="nav-language-btn">${langLabels[currentLang].lang} ▼</button>
-        <div class="nav-language-menu">
-          <button class="nav-language-option" data-lang="IT">ITA</button>
-          <button class="nav-language-option" data-lang="EN">ENG</button>
-        </div>
-      </div>
-      <span class="nav-language-alt">${langLabels[currentLang].altLang}</span>
-    </div>
-    <a href="#mondo-acerbis" class="nav-tool-link">${langLabels[currentLang].mondo}</a>
-    <a href="#contatti" class="nav-tool-link">${langLabels[currentLang].contatti}</a>
-  `;
-  nav.append(toolsDiv);
-  
-  // Language switcher functionality
-  const langDropdown = toolsDiv.querySelector('.nav-language-dropdown');
-  const langBtn = toolsDiv.querySelector('.nav-language-btn');
-  const langMenu = toolsDiv.querySelector('.nav-language-menu');
-  const langOptions = toolsDiv.querySelectorAll('.nav-language-option');
-  
-  // Toggle dropdown
-  langBtn.addEventListener('click', () => {
-    langMenu.classList.toggle('active');
-  });
-  
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (!langDropdown.contains(e.target)) {
-      langMenu.classList.remove('active');
-    }
-  });
-  
-  // Language option selection
-  langOptions.forEach((opt) => {
-    opt.addEventListener('click', () => {
-      const lang = opt.getAttribute('data-lang');
-      localStorage.setItem('acerbis-lang', lang);
-      window.location.reload();
-    });
-  });
+  navCollapse.append(navUl);
+  navbar.append(navCollapse);
+  navCol.append(navbar);
 
-  // hamburger for mobile
-  const hamburger = document.createElement('div');
-  hamburger.classList.add('nav-hamburger');
-  hamburger.innerHTML = `<button type="button" aria-controls="nav" aria-label="Open navigation">
-      <span class="nav-hamburger-icon"></span>
-    </button>`;
+  row.append(navCol);
+  container.append(row);
+  headerDiv.append(container);
+  block.append(headerDiv);
+
+  // Mobile menu toggle
+  const navSections = navbar.querySelector('.navbar-collapse');
   if (navSections) {
-    hamburger.addEventListener('click', () => toggleMenu(nav, navSections));
-    nav.prepend(hamburger);
-    nav.setAttribute('aria-expanded', 'false');
-    // prevent mobile nav behavior on window resize
-    toggleMenu(nav, navSections, isDesktop.matches);
-    isDesktop.addEventListener('change', () => toggleMenu(nav, navSections, isDesktop.matches));
+    toggler.addEventListener('click', () => toggleMenu(navbar, navSections));
+    navbar.setAttribute('aria-expanded', 'false');
+    toggleMenu(navbar, navSections, isDesktop.matches);
+    isDesktop.addEventListener('change', () => toggleMenu(navbar, navSections, isDesktop.matches));
   }
 
-  const navWrapper = document.createElement('div');
-  navWrapper.className = 'nav-wrapper';
-  navWrapper.append(nav);
-  block.append(navWrapper);
+  // Keyboard navigation
+  window.addEventListener('keydown', closeOnEscape);
 }
