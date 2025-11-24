@@ -3,6 +3,7 @@ export default function decorate(block) {
   
   const rows = Array.from(block.querySelectorAll(':scope > div'));
   console.warn('🎯 LOCATIONS CARDS - Total rows:', rows.length);
+  console.warn('🎯 Block HTML:', block.innerHTML.substring(0, 200));
   
   const wrapper = document.createElement('div');
   wrapper.classList.add('locations-cards-wrapper');
@@ -17,9 +18,11 @@ export default function decorate(block) {
       const hasImg = cell.querySelector('img') ? 'YES' : 'NO';
       const text = cell.textContent.trim().substring(0, 50);
       console.warn(`  Cell ${cellIdx}: Image=${hasImg}, Text="${text}"`);
+      console.warn(`  Cell ${cellIdx} HTML:`, cell.innerHTML.substring(0, 100));
     });
     
-    if (cells.length >= 2) {
+    // Need at least 2 cells (image + title, address optional)
+    if (cells.length >= 1) {
       const card = document.createElement('div');
       card.classList.add('location-card');
       
@@ -33,28 +36,58 @@ export default function decorate(block) {
         imageContainer.append(newImg);
         console.warn(`  ✅ Image found in cell 0`);
       } else {
-        // Fallback: use background or placeholder
-        imageContainer.style.backgroundColor = '#f0f0f0';
-        imageContainer.textContent = 'No Image';
+        // Try to find image in any cell
+        img = cells.find(cell => cell.querySelector('img'))?.querySelector('img');
+        if (img) {
+          const newImg = img.cloneNode(true);
+          imageContainer.append(newImg);
+          console.warn(`  ✅ Image found in another cell`);
+        } else {
+          // Fallback: use placeholder
+          imageContainer.style.backgroundColor = '#e0e0e0';
+          imageContainer.style.display = 'flex';
+          imageContainer.style.alignItems = 'center';
+          imageContainer.style.justifyContent = 'center';
+          imageContainer.textContent = 'Image';
+          imageContainer.style.color = '#999';
+          imageContainer.style.fontSize = '14px';
+        }
       }
       
       // Content container (black background)
       const contentContainer = document.createElement('div');
       contentContainer.classList.add('location-card-content');
       
-      // Title - from second cell
+      // Extract title and address from remaining cells
+      let titleText = '';
+      let addressText = '';
+      
+      // If we have 3+ cells: cell[0]=image, cell[1]=title, cell[2]=address
+      // If we have 2 cells: cell[0]=image, cell[1]=title+address combined
+      if (cells.length >= 3) {
+        titleText = cells[1].textContent.trim();
+        addressText = cells[2].textContent.trim();
+      } else if (cells.length === 2) {
+        // Split the second cell by newline or use as title
+        const text = cells[1].textContent.trim();
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+        titleText = lines[0] || '';
+        addressText = lines[1] || '';
+      } else if (cells.length === 1) {
+        // Only image cell, try to extract from text content
+        titleText = '';
+        addressText = '';
+      }
+      
+      // Title
       const title = document.createElement('div');
       title.classList.add('location-card-title');
-      title.textContent = cells[1].textContent.trim();
+      title.textContent = titleText;
       
-      // Address - from third cell if exists, otherwise empty
+      // Address
       const address = document.createElement('div');
       address.classList.add('location-card-address');
-      if (cells.length >= 3) {
-        address.textContent = cells[2].textContent.trim();
-      } else {
-        address.textContent = '';
-      }
+      address.textContent = addressText;
       
       // Triangle accent
       const triangle = document.createElement('div');
@@ -68,7 +101,7 @@ export default function decorate(block) {
       card.append(contentContainer);
       wrapper.append(card);
       
-      console.warn(`  ✅ Card created: "${title.textContent}"`);
+      console.warn(`  ✅ Card created: "${titleText}"`);
     }
   });
   
