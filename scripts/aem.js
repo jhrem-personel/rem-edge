@@ -610,10 +610,22 @@ function decorateBlocks(main) {
  * @returns {Promise}
  */
 async function loadHeader(header) {
-  const headerBlock = buildBlock('header', '');
-  header.append(headerBlock);
-  decorateBlock(headerBlock);
-  return loadBlock(headerBlock);
+  const navPath = `${window.hlx.codeBasePath}/nav`;
+  try {
+    const resp = await fetch(`${navPath}.plain.html`);
+    if (!resp.ok) {
+      console.error('Failed to load nav fragment');
+      return null;
+    }
+    const html = await resp.text();
+    const headerBlock = buildBlock('header', html);
+    header.append(headerBlock);
+    decorateBlock(headerBlock);
+    return loadBlock(headerBlock);
+  } catch (error) {
+    console.error('Error loading header:', error);
+    return null;
+  }
 }
 
 /**

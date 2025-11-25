@@ -1,5 +1,4 @@
 import { getMetadata } from '../../scripts/aem.js';
-import { loadFragment } from '../fragment/fragment.js';
 
 // Media query for responsive behavior
 const isDesktop = window.matchMedia('(min-width: 992px)');
@@ -155,7 +154,53 @@ export default async function decorate(block) {
 
   navbar.append(toggler);
 
-  // Parse navigation from fragment
+  // Parse navigation from block content (table)
+  const table = block.querySelector('table');
+  if (!table) return;
+
+  // Extract navigation items from table
+  const labels = [];
+  const rows = table.querySelectorAll('tr');
+  
+  // Skip first row (header row)
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.querySelectorAll('td');
+    if (cells.length > 0) {
+      const cell = cells[0];
+      const ul = cell.querySelector('ul');
+      if (ul) {
+        ul.querySelectorAll('li').forEach((li) => {
+          const a = li.querySelector('a');
+          let text = '';
+          let url = '';
+
+          if (a) {
+            text = a.textContent.trim();
+            url = a.href;
+          } else {
+            const ownTextNode = Array.from(li.childNodes)
+              .find((n) => n.nodeType === Node.TEXT_NODE);
+            text = (ownTextNode ? ownTextNode.textContent : '').trim();
+          }
+
+          if (text && !labels.find((l) => l.text === text)) {
+            labels.push({ text, url });
+          }
+        });
+      }
+    }
+  }
+
+  // Build navigation structure
+  const navItems = [
+    { label: labels[0], children: labels.slice(1, 4) },      // Acerbis + 3 items
+    { label: labels[4], children: labels.slice(5, 10) },     // Sectors + 5 items
+    { label: labels[10], children: labels.slice(11, 13) },   // Technologies + 2 items
+    { label: labels[13], children: labels.slice(14, 16) },   // Engineering + 2 items
+    { label: labels[16], children: [] },                      // Work with us
+  ];
+
   const navCollapse = document.createElement('div');
   navCollapse.classList.add('collapse', 'navbar-collapse');
   navCollapse.id = 'navbarSupportedContent';
@@ -164,84 +209,50 @@ export default async function decorate(block) {
   navUl.id = 'menu-header-menu';
   navUl.classList.add('header-menu', 'ms-auto');
 
-  // Extract navigation items from fragment
-  if (fragment) {
-    const allLis = Array.from(fragment.querySelectorAll('li'));
-    const labels = [];
+  navItems.forEach((item, idx) => {
+    if (!item.label) return;
 
-    allLis.forEach((li) => {
-      const link = li.querySelector(':scope > a');
-      let text = '';
-      let url = '';
+    const li = document.createElement('li');
+    li.classList.add('nav-item');
+    if (item.children.length > 0) {
+      li.classList.add('dropdown');
+    }
 
-      if (link) {
-        text = link.textContent.trim();
-        url = link.href;
-      } else {
-        const ownTextNode = Array.from(li.childNodes)
-          .find((n) => n.nodeType === Node.TEXT_NODE);
-        text = (ownTextNode ? ownTextNode.textContent : '').trim();
-      }
+    const a = document.createElement('a');
+    a.href = item.label.url || '#';
+    a.classList.add('nav-link');
+    a.textContent = item.label.text;
 
-      if (text && !labels.find((l) => l.text === text)) {
-        labels.push({ text, url });
-      }
-    });
+    if (item.children.length > 0) {
+      a.classList.add('dropdown-toggle');
+      a.setAttribute('data-bs-toggle', 'dropdown');
+      a.setAttribute('aria-haspopup', 'true');
+      a.setAttribute('aria-expanded', 'false');
 
-    // Build navigation structure
-    const navItems = [
-      { label: labels[0], children: labels.slice(1, 4) },      // Acerbis + 3 items
-      { label: labels[4], children: labels.slice(5, 10) },     // Sectors + 5 items
-      { label: labels[10], children: labels.slice(11, 13) },   // Technologies + 2 items
-      { label: labels[13], children: labels.slice(14, 16) },   // Engineering + 2 items
-      { label: labels[16], children: [] },                      // Work with us
-    ];
+      const dropdownUl = document.createElement('ul');
+      dropdownUl.classList.add('dropdown-menu');
 
-    navItems.forEach((item, idx) => {
-      if (!item.label) return;
+      item.children.forEach((child) => {
+        if (!child.text) return;
 
-      const li = document.createElement('li');
-      li.classList.add('nav-item');
-      if (item.children.length > 0) {
-        li.classList.add('dropdown');
-      }
+        const dropdownLi = document.createElement('li');
+        const dropdownA = document.createElement('a');
+        dropdownA.href = child.url || '#';
+        dropdownA.classList.add('dropdown-item');
+        dropdownA.textContent = child.text;
 
-      const a = document.createElement('a');
-      a.href = item.label.url || '#';
-      a.classList.add('nav-link');
-      a.textContent = item.label.text;
+        dropdownLi.append(dropdownA);
+        dropdownUl.append(dropdownLi);
+      });
 
-      if (item.children.length > 0) {
-        a.classList.add('dropdown-toggle');
-        a.setAttribute('data-bs-toggle', 'dropdown');
-        a.setAttribute('aria-haspopup', 'true');
-        a.setAttribute('aria-expanded', 'false');
+      li.append(a);
+      li.append(dropdownUl);
+    } else {
+      li.append(a);
+    }
 
-        const dropdownUl = document.createElement('ul');
-        dropdownUl.classList.add('dropdown-menu');
-
-        item.children.forEach((child) => {
-          if (!child.text) return;
-
-          const dropdownLi = document.createElement('li');
-          const dropdownA = document.createElement('a');
-          dropdownA.href = child.url || '#';
-          dropdownA.classList.add('dropdown-item');
-          dropdownA.textContent = child.text;
-
-          dropdownLi.append(dropdownA);
-          dropdownUl.append(dropdownLi);
-        });
-
-        li.append(a);
-        li.append(dropdownUl);
-      } else {
-        li.append(a);
-      }
-
-      navUl.append(li);
-    });
-  }
+    navUl.append(li);
+  });
 
   navCollapse.append(navUl);
   navbar.append(navCollapse);
