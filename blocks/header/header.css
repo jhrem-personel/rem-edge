@@ -86,27 +86,35 @@
   float: none;
 }
 
-.hdr-sopra .button {
-  background-color: #000000;
-  border: 2px solid #ffffff;
-  color: #ffffff;
-  padding: 10px 32px;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  white-space: nowrap;
+/* Language selector on the left */
+.hdr-sopra .box-icl_language_selector {
+  margin-right: auto;
 }
 
-.hdr-sopra .button:hover {
-  background-color: #ffffff;
-  color: #000000;
-  border-color: #ffffff;
+/* Header buttons - override global button styles */
+.hdr-sopra .button {
+  background-color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  color: #ffffff !important;
+  padding: 10px 32px !important;
+  text-decoration: none !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+.hdr-sopra .button:hover,
+.hdr-sopra .button:focus {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
 }
 
 .hdr-sopra .ms-2 {
