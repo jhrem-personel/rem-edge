@@ -76,12 +76,12 @@
 }
 
 .hdr-sopra .button {
-  background-color: transparent;
-  border: 1px solid #ffffff;
+  background-color: #000000;
+  border: 2px solid #ffffff;
   color: #ffffff;
-  padding: 6px 18px;
+  padding: 8px 24px;
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 999px;
   cursor: pointer;
@@ -93,7 +93,8 @@
 
 .hdr-sopra .button:hover {
   background-color: #ffffff;
-  color: #050914;
+  color: #000000;
+  border-color: #ffffff;
 }
 
 .hdr-sopra .ms-2 {
@@ -261,6 +262,21 @@
 }
 
 .nav-link.active {
+  color: #ffeb00;
+}
+
+/* Dropdown items also white with yellow hover */
+.dropdown-item {
+  display: block;
+  padding: 10px 20px;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
   color: #ffeb00;
 }
 
