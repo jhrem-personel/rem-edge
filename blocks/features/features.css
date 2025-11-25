@@ -2,6 +2,7 @@
   width: 100%;
   padding-top: 3rem;
   padding-bottom: 3rem;
+    font-family: "Figtree", sans-serif;
 }
 
 .features-grid {
@@ -35,7 +36,7 @@
 }
 
 .feature-number {
-  font-size: 0.85rem;
+  font-size: 18px;
   font-weight: 600;
   letter-spacing: 0.3em;
   color: rgba(0, 0, 0, 0.25);
@@ -44,7 +45,6 @@
 
 .feature-title {
   margin: 0;
-  font-family: var(--heading-font-family);
   font-size: clamp(1.8rem, 2.3vw, 2.5rem);
   font-weight: 700;
   text-transform: uppercase;
@@ -64,6 +64,11 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+    padding-left: 2em;
+}
+
+.feature-link-anchor:hover {
+    text-decoration: unset;
 }
 
 .feature-description p {
