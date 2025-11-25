@@ -7,6 +7,17 @@
   z-index: 100;
 }
 
+/* Override global link colors for header */
+.header a:any-link {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.header a:hover {
+  color: #ffeb00;
+  text-decoration: none;
+}
+
 .menubar {
   position: relative;
   background-color: #050914;
