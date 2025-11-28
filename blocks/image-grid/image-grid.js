@@ -6,7 +6,9 @@ export default function decorate(block) {
   const container = document.createElement('div');
   container.classList.add('image-grid-container');
   
-  rows.forEach((row, idx) => {
+  let imageCount = 0;
+  
+  rows.forEach((row) => {
     const cells = Array.from(row.querySelectorAll(':scope > div'));
     
     cells.forEach((cell) => {
@@ -15,7 +17,11 @@ export default function decorate(block) {
       if (img) {
         const gridItem = document.createElement('div');
         gridItem.classList.add('image-grid-item');
-        if (idx === 0) gridItem.classList.add('large');
+        
+        // First image is the large one
+        if (imageCount === 0) {
+          gridItem.classList.add('large');
+        }
         
         const picture = createOptimizedPicture(img.src, img.alt, false, [
           { width: '1200' },
@@ -29,6 +35,8 @@ export default function decorate(block) {
         
         gridItem.append(link);
         container.append(gridItem);
+        
+        imageCount++;
       }
     });
   });

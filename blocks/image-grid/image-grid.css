@@ -6,9 +6,9 @@
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  grid-template-rows: auto auto;
-  gap: 16px;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px;
 }
 
 .image-grid-item {
@@ -19,10 +19,7 @@
 
 .image-grid-item.large {
   grid-row: span 2;
-}
-
-.image-grid-item:nth-child(4) {
-  grid-column: span 1;
+  grid-column: 1;
 }
 
 .image-grid-item a {
