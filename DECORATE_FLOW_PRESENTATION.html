@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>How decorate(block) Works - EDS Component Library</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #050914;
+      margin-bottom: 10px;
+      font-size: 32px;
+      border-bottom: 3px solid #ffeb00;
+      padding-bottom: 10px;
+    }
+    
+    h2 {
+      color: #050914;
+      margin-top: 40px;
+      margin-bottom: 20px;
+      font-size: 24px;
+      border-left: 4px solid #ffeb00;
+      padding-left: 15px;
+    }
+    
+    h3 {
+      color: #1a1a2e;
+      margin-top: 25px;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    
+    p {
+      margin-bottom: 15px;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    
+    .diagram {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 20px;
+      margin: 20px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre;
+      line-height: 1.4;
+    }
+    
+    .code-block {
+      background: #f0f0f0;
+      border-left: 3px solid #050914;
+      padding: 15px;
+      margin: 15px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      overflow-x: auto;
+    }
+    
+    .highlight {
+      background: #fffacd;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    
+    .step {
+      background: #f9f9f9;
+      border-left: 4px solid #ffeb00;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    
+    .step strong {
+      color: #050914;
+    }
+    
+    .summary-box {
+      background: #e8f4f8;
+      border: 2px solid #050914;
+      border-radius: 4px;
+      padding: 20px;
+      margin: 30px 0;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+    
+    .page-break {
+      page-break-after: always;
+      margin: 40px 0;
+      border-bottom: 2px dashed #ccc;
+      padding-bottom: 40px;
+    }
+    
+    .section-number {
+      display: inline-block;
+      background: #050914;
+      color: white;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 30px;
+      margin-right: 10px;
+      font-weight: bold;
+    }
+    
+    ul, ol {
+      margin-left: 30px;
+      margin-bottom: 15px;
+    }
+    
+    li {
+      margin-bottom: 8px;
+    }
+    
+    .footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+    }
+    
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .container {
+        box-shadow: none;
+        max-width: 100%;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <!-- TITLE PAGE -->
+    <h1>How `decorate(block)` Works</h1>
+    <p style="font-size: 18px; color: #666; margin-top: 20px;">
+      Understanding Edge Delivery Services Component Library Architecture
+    </p>
+    <p style="font-size: 14px; color: #999; margin-top: 40px;">
+      rem-edge Project | Carousel Component Example
+    </p>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 1: OVERVIEW -->
+    <h2><span class="section-number">1</span>Overview</h2>
+    
+    <p>
+      Every block in <span class="highlight">Edge Delivery Services</span> has a <span class="highlight">decorate(block)</span> function.
+    </p>
+    
+    <p>
+      When a page loads:
+    </p>
+    <ol>
+      <li>EDS scans the HTML for blocks (e.g., <code>&lt;div class="carousel"&gt;</code>)</li>
+      <li>For each block found, it calls the <span class="highlight">decorate(block)</span> function</li>
+      <li>Inside <span class="highlight">decorate</span>, we transform the raw HTML into the final interactive component</li>
+    </ol>
+    
+    <p style="margin-top: 30px;">
+      In the carousel example:
+    </p>
+    <ul>
+      <li>Raw HTML from Google Docs → simple nested divs</li>
+      <li><span class="highlight">decorate(block)</span> transforms it → full carousel with slides, buttons, dots</li>
+      <li>Result → interactive carousel with auto-rotate behavior</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 2: THE COMPLETE FLOW -->
+    <h2><span class="section-number">2</span>The Complete Flow</h2>
+    
+    <div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+│                    BROWSER PAGE LOADS                           │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  EDS Runtime (scripts.js / aem.js)                              │
+│  Scans DOM for blocks:                                          │
+│  document.querySelectorAll('.carousel')                         │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+        ┌────────────────────────────────────┐
+        │  Found: &lt;div class="carousel"&gt;     │
+        │  (Raw HTML from Google Doc)        │
+        └────────────────────┬───────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────────────────────┐
+        │  Import carousel.js                                │
+        │  Call: export default function decorate(block)     │
+        └────────────────────┬───────────────────────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────────────────────┐
+        │  decorate(block) TRANSFORMS the HTML               │
+        │                                                    │
+        │  Input:  Raw &lt;div&gt; children (rows from Doc)        │
+        │  Output: Full carousel with buttons, dots, logic   │
+        └────────────────────┬───────────────────────────────┘
+                             │
+                             ▼
+        ┌────────────────────────────────────────────────────┐
+        │  Result: Interactive carousel on page              │
+        │  - Slides with images & text                       │
+        │  - Prev/Next buttons                               │
+        │  - Dots for navigation                             │
+        │  - Auto-rotate every 5 seconds                     │
+        └────────────────────────────────────────────────────┘</div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 3: STEP BY STEP -->
+    <h2><span class="section-number">3</span>What decorate(block) Does – Step by Step</h2>
+    
+    <h3>Input: Raw HTML from Google Doc</h3>
+    <div class="code-block">&lt;div class="carousel"&gt;
+  &lt;div&gt;
+    &lt;div&gt;&lt;img src="slide1.jpg"&gt;&lt;/div&gt;
+    &lt;div&gt;&lt;p&gt;Slide 1 text&lt;/p&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div&gt;&lt;img src="slide2.jpg"&gt;&lt;/div&gt;
+    &lt;div&gt;&lt;p&gt;Slide 2 text&lt;/p&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div&gt;
+    &lt;div&gt;&lt;img src="slide3.jpg"&gt;&lt;/div&gt;
+    &lt;div&gt;&lt;p&gt;Slide 3 text&lt;/p&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    
+    <div class="step">
+      <strong>STEP 1: Read rows</strong>
+      <p>Extract each direct child &lt;div&gt; as a row from the Google Doc table.</p>
+      <div class="code-block">const rows = Array.from(
+  block.querySelectorAll(':scope > div')
+);
+// → 3 rows found</div>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 2: Create structure</strong>
+      <p>Build the carousel DOM skeleton:</p>
+      <ul>
+        <li>carousel-wrapper (outer shell)</li>
+        <li>carousel-container (viewport)</li>
+        <li>carousel-slides (inner strip)</li>
+      </ul>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 3: Initialize state</strong>
+      <p>Set up variables to track the carousel state:</p>
+      <div class="code-block">let slideIndex = 0;
+const slideElements = [];</div>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 4: Loop rows → build slides</strong>
+      <p>For each row, create a carousel-slide and extract content:</p>
+      <ul>
+        <li>Extract image, heading, text</li>
+        <li>Create &lt;div class="carousel-slide"&gt;</li>
+        <li>Mark first slide as .active</li>
+        <li>Store reference in slideElements[]</li>
+      </ul>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 5: Create controls</strong>
+      <p>Add interactive elements:</p>
+      <ul>
+        <li>&lt;button class="carousel-prev"&gt; (Previous)</li>
+        <li>&lt;button class="carousel-next"&gt; (Next)</li>
+        <li>&lt;div class="carousel-dots"&gt; (one dot per slide)</li>
+      </ul>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 6: Wire up behavior</strong>
+      <p>Add event listeners and logic:</p>
+      <ul>
+        <li>prevBtn.addEventListener('click', ...) → go to previous slide</li>
+        <li>nextBtn.addEventListener('click', ...) → go to next slide</li>
+        <li>dotElements.forEach(dot => dot.addEventListener(...)) → jump to slide</li>
+        <li>setInterval(...) → auto-rotate every 5 seconds</li>
+      </ul>
+    </div>
+    
+    <div class="step">
+      <strong>STEP 7: Replace original content</strong>
+      <p>Clear the raw HTML and insert the fully built carousel:</p>
+      <div class="code-block">block.textContent = '';
+block.append(wrapper);</div>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 4: OUTPUT -->
+    <h2><span class="section-number">4</span>Output: Full Interactive Carousel</h2>
+    
+    <div class="code-block">&lt;div class="carousel"&gt;
+  &lt;div class="carousel-wrapper"&gt;
+    &lt;button class="carousel-prev"&gt;‹&lt;/button&gt;
+    &lt;div class="carousel-container"&gt;
+      &lt;div class="carousel-slides"&gt;
+        &lt;div class="carousel-slide active"&gt;
+          &lt;img class="carousel-image" ...&gt;
+          &lt;div class="carousel-content"&gt;
+            &lt;h3 class="carousel-title"&gt;...&lt;/h3&gt;
+            &lt;p class="carousel-text"&gt;...&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class="carousel-slide"&gt;...&lt;/div&gt;
+        &lt;div class="carousel-slide"&gt;...&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;button class="carousel-next"&gt;›&lt;/button&gt;
+    &lt;div class="carousel-dots"&gt;
+      &lt;button class="carousel-dot active"&gt;&lt;/button&gt;
+      &lt;button class="carousel-dot"&gt;&lt;/button&gt;
+      &lt;button class="carousel-dot"&gt;&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 5: TIMELINE -->
+    <h2><span class="section-number">5</span>Timeline: When Does decorate Run?</h2>
+    
+    <h3>Authoring Phase (Google Docs)</h3>
+    <div class="step">
+      <ol>
+        <li>Author creates Google Doc</li>
+        <li>Inserts table with "carousel" block</li>
+        <li>Fills rows with images & text</li>
+        <li>Clicks "Publish" in Sidekick</li>
+      </ol>
+    </div>
+    
+    <h3>Server Phase (EDS Conversion)</h3>
+    <div class="step">
+      <p>EDS converts Doc → HTML and stores as .plain.html</p>
+    </div>
+    
+    <h3>Browser Phase (JavaScript Runs)</h3>
+    <div class="step">
+      <ol>
+        <li>Browser loads HTML</li>
+        <li>Browser loads scripts.js</li>
+        <li>scripts.js scans for blocks</li>
+        <li>Finds &lt;div class="carousel"&gt;</li>
+        <li>Imports carousel.js</li>
+        <li><span class="highlight">Calls decorate(block)</span> ← HERE!</li>
+        <li>decorate transforms HTML</li>
+        <li>Result: interactive carousel</li>
+      </ol>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 6: THE BRIDGE -->
+    <h2><span class="section-number">6</span>The Bridge: decorate Connects Everything</h2>
+    
+    <div class="diagram">┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  GOOGLE DOC (Author's world)                                    │
+│  ├── Table with "carousel" block                                │
+│  └── Rows with images & text                                    │
+│                                                                 │
+│  ↓ (Sidekick publishes)                                         │
+│                                                                 │
+│  RAW HTML (EDS conversion)                                      │
+│  ├── &lt;div class="carousel"&gt;                                     │
+│  └── Simple nested &lt;div&gt;s (rows)                                │
+│                                                                 │
+│  ↓ (Browser loads page)                                         │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │  decorate(block) TRANSFORMS HERE                        │    │
+│  │  ← This is where the magic happens ←                    │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                                                                 │
+│  INTERACTIVE CAROUSEL (User's experience)                       │
+│  ├── Slides with images                                         │
+│  ├── Prev/Next buttons                                          │
+│  ├── Dots for navigation                                        │
+│  └── Auto-rotate behavior                                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘</div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 7: KEY CONCEPTS -->
+    <h2><span class="section-number">7</span>Key Concepts</h2>
+    
+    <h3>What is decorate(block)?</h3>
+    <ul>
+      <li><strong>Entry point:</strong> EDS calls this function for each block</li>
+      <li><strong>Transformer:</strong> Takes raw HTML from Google Docs and transforms it</li>
+      <li><strong>Orchestrator:</strong> Coordinates all the logic needed for this component</li>
+      <li><strong>One per block type:</strong> Each block file has its own decorate function</li>
+    </ul>
+    
+    <h3>What about other functions in carousel.js?</h3>
+    <ul>
+      <li><strong>showSlide(n):</strong> Helper function inside decorate</li>
+      <li><strong>Purpose:</strong> Encapsulate logic for showing/hiding slides</li>
+      <li><strong>Visibility:</strong> Only visible inside carousel.js, not exported</li>
+      <li><strong>Called by:</strong> Event listeners (prev/next/dots) and setInterval</li>
+    </ul>
+    
+    <h3>Why does decorate matter?</h3>
+    <ul>
+      <li>Separates <strong>component creation</strong> (developer work) from <strong>page authoring</strong> (author work)</li>
+      <li>Authors only edit Google Docs; developers control how it renders</li>
+      <li>Enables <strong>reusability:</strong> same component used on many pages</li>
+      <li>Enables <strong>consistency:</strong> all carousels look and behave the same</li>
+    </ul>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 8: SUMMARY -->
+    <h2><span class="section-number">8</span>Summary</h2>
+    
+    <div class="summary-box">
+      <p>
+        <strong>When a page loads, EDS scans the HTML for blocks (e.g., &lt;div class="carousel"&gt;).</strong>
+      </p>
+      <p>
+        <strong>For each one, it calls the decorate(block) function from carousel.js.</strong>
+      </p>
+      <p>
+        <strong>Inside decorate, we:</strong>
+      </p>
+      <ul>
+        <li>Read the raw HTML that came from the Google Doc table</li>
+        <li>Transform it into a full carousel structure</li>
+        <li>Build the slides, add buttons and dots</li>
+        <li>Wire up click handlers and auto-rotation</li>
+        <li>Replace the original content with the final interactive component</li>
+      </ul>
+      <p style="margin-top: 20px;">
+        <strong>Result: Authors can create complex interactive carousels by simply editing a Google Doc table. Developers control the behavior and design through the component library.</strong>
+      </p>
+    </div>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 9: COMPARISON -->
+    <h2><span class="section-number">9</span>How This Differs from Other Components</h2>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+      <tr style="background: #050914; color: white;">
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Aspect</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Carousel</th>
+        <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Other Components</th>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Complexity</strong></td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Stateful, interactive</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Mostly layout + styling</td>
+      </tr>
+      <tr style="background: #f9f9f9;">
+        <td style="border: 1px solid #ddd; padding: 12px;"><strong>State Management</strong></td>
+        <td style="border: 1px solid #ddd; padding: 12px;">slideIndex, slideElements</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Usually none</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;"><strong>User Interaction</strong></td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Prev/Next/Dots, auto-rotate</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Links, buttons inside content</td>
+      </tr>
+      <tr style="background: #f9f9f9;">
+        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Helper Functions</strong></td>
+        <td style="border: 1px solid #ddd; padding: 12px;">showSlide()</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Usually minimal</td>
+      </tr>
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 12px;"><strong>Behavior</strong></td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Changes over time (auto-rotate)</td>
+        <td style="border: 1px solid #ddd; padding: 12px;">Static once rendered</td>
+      </tr>
+    </table>
+    
+    <div class="page-break"></div>
+    
+    <!-- SECTION 10: PRESENTATION GUIDE -->
+    <h2><span class="section-number">10</span>How to Present This</h2>
+    
+    <h3>Slide 1: Overview</h3>
+    <p>Show the complete flow diagram. Explain that every block has a decorate function that EDS calls.</p>
+    
+    <h3>Slide 2: Step-by-Step</h3>
+    <p>Walk through the 7 steps of transformation. Show input (raw HTML) and output (interactive carousel).</p>
+    
+    <h3>Slide 3: Timeline</h3>
+    <p>Explain when decorate runs: after the page loads in the browser, not during build time.</p>
+    
+    <h3>Slide 4: The Bridge</h3>
+    <p>Show how decorate connects Google Docs → raw HTML → interactive component.</p>
+    
+    <h3>Slide 5: Key Concepts</h3>
+    <p>Explain what decorate is, what helper functions do, and why it matters.</p>
+    
+    <h3>Slide 6: Summary</h3>
+    <p>Use the summary box. This is the key takeaway.</p>
+    
+    <h3>Slide 7: Comparison</h3>
+    <p>Show the table comparing carousel to other components. Highlight what makes carousel special.</p>
+    
+    <div class="footer">
+      <p>rem-edge Project | Component Library Architecture</p>
+      <p>Created for presentation to Alessandro and the team</p>
+    </div>
+    
+  </div>
+</body>
+</html>
